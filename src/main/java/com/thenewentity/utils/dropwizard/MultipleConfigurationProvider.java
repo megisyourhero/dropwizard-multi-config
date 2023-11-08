@@ -12,15 +12,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
+import org.apache.commons.text.StringSubstitutor;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -28,16 +22,15 @@ import org.yaml.snakeyaml.Yaml;
  * An implementation of ConfigurationSourceProvider which knows how to merge multiple .yaml files so that you can have one
  * "master" configuration with environment- and user- specific overrides.
  * </p>
- * 
+ *
  * <p>
  * In your DropWizard application class's initialize(Bootstrap bootstrap) method, pass a MultipleConfigurationProvider to
  * bootstrap.setConfigurationSourceProvider()
  * </p>
- * 
+ *
  * <p>
  * MultipleConfigurationProvider relies on {@link MultipleConfigurationMerger} to actually parse and merge the yaml files.
  * </p>
- * 
  */
 public class MultipleConfigurationProvider implements ConfigurationSourceProvider {
 
@@ -48,7 +41,6 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
     private static Set<Character> globChars = buildGlobChars();
 
     MultipleConfigurationProvider() {
-
     }
 
     public static Builder builder() {
@@ -70,8 +62,7 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
         }
 
         /**
-         * @param value
-         *            - a list of filenames to merge into the yaml specified in the {@code path} provided to {@link #open(String)}
+         * @param value - a list of filenames to merge into the yaml specified in the {@code path} provided to {@link #open(String)}
          */
         Builder setOverrideFiles(Collection<String> value) {
             result.overrideFiles = value;
@@ -88,21 +79,19 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
      * <p>
      * Called by DropWizard during application startup; this method is where the merging of multiple configuration files happens.
      * </p>
-     * 
+     *
      * <p>
      * Read the specified yaml, then merge any {@link #overrideFiles} specified in the
      * {@link #overrideFiles} on top of it. Then, dump that out as yaml into
      * {@link #effectiveConfig}, and return an InputStream to DropWizard.
      * </p>
-     * 
+     *
      * <p>
      * <b>Side Effects</b>
      * <dd>As discussed in the description, changes {@link #effectiveConfig}.</dd>
      * </p>
-     * 
-     * @param path
-     *            - the path provided by DropWizard
-     * 
+     *
+     * @param path - the path provided by DropWizard
      */
     @Override
     public InputStream open(String path) throws IOException {
@@ -129,7 +118,7 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
 
     /**
      * Build a set of characters containing all of the glob characters recognized by {@link FileSystem#getPathMatcher}
-     * 
+     *
      * @return the set of glob pattern characters
      */
     private static Set<Character> buildGlobChars() {
@@ -141,7 +130,7 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
     /**
      * Finds the last occurrence of File.separatorChar prior to the first occurrence of glob pattern characters. If there are no
      * glob pattern characters, returns -1.
-     * 
+     *
      * @param path
      */
     private int lastNonGlobPath(String path) {
@@ -159,7 +148,7 @@ public class MultipleConfigurationProvider implements ConfigurationSourceProvide
 
     /**
      * Expands {@code path} with glob patterns to return a sorted collection of absolute paths.
-     * 
+     *
      * @param path
      */
     private Collection<String> globPath(String path) throws IOException {

@@ -1,17 +1,18 @@
 package com.thenewentity.utils.dropwizard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.yaml.snakeyaml.Yaml;
 
 public class MultipleConfigurationMerger {
 
@@ -19,6 +20,7 @@ public class MultipleConfigurationMerger {
 
     private ConfigurationReader configurationReader;
     private ObjectMapper mapper;
+    private StringSubstitutor substitutor;
     private static final Yaml yaml = new Yaml();
 
     public static Builder builder() {
@@ -40,6 +42,9 @@ public class MultipleConfigurationMerger {
             if (result.configurationReader == null) {
                 result.configurationReader = new DefaultConfigurationReader();
             }
+            if (result.substitutor == null) {
+                result.substitutor = new EnvironmentVariableSubstitutor(false);
+            }
             return result;
         }
 
@@ -50,6 +55,11 @@ public class MultipleConfigurationMerger {
 
         public Builder setObjectMapper(ObjectMapper value) {
             result.mapper = value;
+            return this;
+        }
+
+        public Builder setSubstitutor(StringSubstitutor value) {
+            result.substitutor = value;
             return this;
         }
     }
@@ -114,8 +124,9 @@ public class MultipleConfigurationMerger {
      *             if the file couldn't be read for any reason.
      */
     private void mergeConfig(Map<Object, Object> config, String path) throws IOException {
-        String configuration = this.configurationReader.readConfiguration(path);
-        Object overrides = yaml.load(configuration);
+        final String configuration = this.configurationReader.readConfiguration(path);
+        final String substituted = this.substitutor.replace(configuration);
+        Object overrides = yaml.load(substituted);
         if (overrides == null) {
             return;
         }
